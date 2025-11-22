@@ -1,13 +1,14 @@
 ﻿using System;
-using System.Configuration;
-using System.Data;
-using System.Data.SqlClient;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Configuration;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Data.SqlClient;
+using System.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -23,13 +24,12 @@ namespace WPFZooManager
         public MainWindow()
         {
             InitializeComponent();
-            InitializeComponent();
             string connectionString = ConfigurationManager.ConnectionStrings["WPFZooManager.Properties.Settings.AnimalZooDBConnectionString"].ConnectionString;
             sqlConnection = new SqlConnection(connectionString);
-            ShowZoos();
+            ShowZoo();
             ShowAllAnimals();
         }
-        private void ShowZoos()
+        private void ShowZoo()
         {
             try
             {
@@ -67,6 +67,7 @@ namespace WPFZooManager
                 {
                     DataTable animalTable = new DataTable();
                     sqlDataAdapter.Fill(animalTable);
+
                     listAssociatedAnimals.DisplayMemberPath = "Name";
                     listAssociatedAnimals.SelectedValuePath = "Id";
                     listAssociatedAnimals.ItemsSource = animalTable.DefaultView;
@@ -74,7 +75,7 @@ namespace WPFZooManager
             }
             catch (Exception e)
             {
-                //MessageBox.Show(e.ToString());
+                MessageBox.Show(e.ToString());
             }
         }
         private void ShowAllAnimals()
@@ -83,10 +84,12 @@ namespace WPFZooManager
             {
                 string query = "SELECT * FROM Animal";
                 SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(query, sqlConnection);
+
                 using (sqlDataAdapter)
                 {
                     DataTable animalTable = new DataTable();
                     sqlDataAdapter.Fill(animalTable);
+
                     listAllAnimals.DisplayMemberPath = "Name";
                     listAllAnimals.SelectedValuePath = "Id";
                     listAllAnimals.ItemsSource = animalTable.DefaultView;
@@ -96,10 +99,6 @@ namespace WPFZooManager
             {
                 MessageBox.Show(e.ToString());
             }
-        }
-        private void listZoos_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            ShowAssociatedAnimals();
         }
 
         private void DeleteZoo_Click(object sender, RoutedEventArgs e)
@@ -114,12 +113,12 @@ namespace WPFZooManager
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString());
+                //MessageBox.Show(ex.ToString());
             }
             finally
             {
                 sqlConnection.Close();
-                ShowZoos();
+                ShowZoo();
             }
         }
 
@@ -187,15 +186,15 @@ namespace WPFZooManager
             }
         }
 
-        private void RemoveAnimal_Click(object sender, RoutedEventArgs e)
+        private void UpdateZoo_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                string query = "DELETE FROM ZooAnimal WHERE ZooId = @ZooId AND AnimalId = @AnimalId";
+                string query = "Update Zoo Set Location = @Location where Id = @ZooId";
                 SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
                 sqlConnection.Open();
-                sqlCommand.Parameters.AddWithValue("@AnimalId", listAssociatedAnimals.SelectedValue);
                 sqlCommand.Parameters.AddWithValue("@ZooId", listZoos.SelectedValue);
+                sqlCommand.Parameters.AddWithValue("@Location", myTextBox.Text);
                 sqlCommand.ExecuteScalar();
             }
             catch (Exception ex)
@@ -205,7 +204,7 @@ namespace WPFZooManager
             finally
             {
                 sqlConnection.Close();
-                ShowAssociatedAnimals();
+                ShowZoo();
             }
         }
 
