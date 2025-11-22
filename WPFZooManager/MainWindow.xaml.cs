@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
@@ -50,14 +49,20 @@ namespace WPFZooManager
                 MessageBox.Show(e.ToString());
             }
         }
+
+        private void listZoos_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ShowAssociatedAnimals();
+        }
         private void ShowAssociatedAnimals()
         {
             try
             {
-                string query = @"SELECT a.Name FROM Animal a INNER JOIN ZooAnimal za ON a.ID = za.AnimalId WHERE za.ZooId = @ZooId";
+                string query = @"SELECT a.Id, a.Name FROM Animal a INNER JOIN ZooAnimal za ON a.Id = za.AnimalId WHERE za.ZooId = @ZooId";
                 SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@ZooId", listZoos.SelectedValue);
                 SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(sqlCommand);
+
                 using (sqlDataAdapter)
                 {
                     DataTable animalTable = new DataTable();
@@ -105,27 +110,6 @@ namespace WPFZooManager
                 SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
                 sqlConnection.Open();
                 sqlCommand.Parameters.AddWithValue("@ZooId", listZoos.SelectedValue);
-                sqlCommand.ExecuteScalar();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString());
-            }
-            finally
-            {
-                sqlConnection.Close();
-                ShowZoos();
-            }
-        }
-
-        private void AddZoo_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                string query = "insert into Zoo values (@Location)";
-                SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
-                sqlConnection.Open();
-                sqlCommand.Parameters.AddWithValue("@Location", myTextBox.Text);
                 sqlCommand.ExecuteScalar();
             }
             catch (Exception ex)
@@ -247,14 +231,13 @@ namespace WPFZooManager
             }
         }
 
-        private void UpdateZoo_Click(object sender, RoutedEventArgs e)
+        private void AddZoo_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                string query = "update Zoo Set Location = @Location where Id = @ZooId";
+                string query = "insert into Zoo values (@Location)";
                 SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
                 sqlConnection.Open();
-                sqlCommand.Parameters.AddWithValue("@ZooId", listZoos.SelectedValue);
                 sqlCommand.Parameters.AddWithValue("@Location", myTextBox.Text);
                 sqlCommand.ExecuteScalar();
             }
@@ -265,7 +248,29 @@ namespace WPFZooManager
             finally
             {
                 sqlConnection.Close();
-                ShowZoos();
+                ShowZoo();
+            }
+        }
+
+        private void RemoveAnimal_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string query = "DELETE FROM ZooAnimal WHERE ZooId = @ZooId and AnimalId = @AnimalId";
+                SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
+                sqlConnection.Open();
+                sqlCommand.Parameters.AddWithValue("@ZooId", listZoos.SelectedValue);
+                sqlCommand.Parameters.AddWithValue("@AnimalId", listAssociatedAnimals.SelectedValue);
+                sqlCommand.ExecuteScalar();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
+            finally
+            {
+                sqlConnection.Close();
+                ShowAssociatedAnimals();
             }
         }
     }
